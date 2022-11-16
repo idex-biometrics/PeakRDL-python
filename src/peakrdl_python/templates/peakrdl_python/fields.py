@@ -19,14 +19,15 @@ class FieldSizeProps:
     """
     class to hold the key attributes of a field
     """
-    __slots__ = ['__msb', '__lsb', '__width', '__high', '__low']
+    __slots__ = ['__msb', '__lsb', '__width', '__high', '__low', '__default']
 
-    def __init__(self, width: int, msb: int, lsb: int, high: int, low: int): #pylint: disable=too-many-arguments
+    def __init__(self, width: int, msb: int, lsb: int, high: int, low: int, default: Optional[int]): #pylint: disable=too-many-arguments
         self.__width = width
         self.__msb = msb
         self.__lsb = lsb
         self.__high = high
         self.__low = low
+        self.__default = default
 
         if self.width < 1:
             raise ValueError('width must be greater than 0')
@@ -102,6 +103,13 @@ class FieldSizeProps:
         """
         return self.__low
 
+    @property
+    def default(self) -> Optional[int]:
+        """
+        Default (reset) value of the field, or None if the field has no default.
+        """
+        return self.__default
+
 
 class Field(Base):
     """
@@ -113,15 +121,13 @@ class Field(Base):
     """
 
     __slots__ = ['__parent_register', '__size_props',
-                 '__bitmask', '__msb0', '__lsb0', '__default']
+                 '__bitmask', '__msb0', '__lsb0']
 
     def __init__(self, parent_register: Reg, size_props: FieldSizeProps,
-                 default: Optional[int], logger_handle: str, inst_name: str):
+                 logger_handle: str, inst_name: str):
 
         super().__init__(logger_handle=logger_handle,
                          inst_name=inst_name)
-
-        self.__default = default
 
         if not isinstance(size_props, FieldSizeProps):
             raise TypeError(f'size_props must be of {type(FieldSizeProps)} '
@@ -278,7 +284,7 @@ class Field(Base):
         """
         The field's default (reset) value, or None if the field is not reset.
         """
-        return self.__default
+        return self.__size_props.default
 
     @property
     def _parent_register(self) -> Reg:
@@ -304,7 +310,6 @@ class FieldReadOnly(Field):
     def __init__(self,
                  parent_register: ReadableRegister,
                  size_props: FieldSizeProps,
-                 default: Optional[int],
                  logger_handle: str,
                  inst_name: str):
 
@@ -314,7 +319,6 @@ class FieldReadOnly(Field):
 
         super().__init__(logger_handle=logger_handle,
                          size_props=size_props,
-                         default=default,
                          parent_register=parent_register,
                          inst_name=inst_name)
 
@@ -385,7 +389,6 @@ class FieldWriteOnly(Field):
     def __init__(self,
                  parent_register: WriteableRegister,
                  size_props: FieldSizeProps,
-                 default: Optional[int],
                  logger_handle: str,
                  inst_name: str):
 
@@ -395,7 +398,6 @@ class FieldWriteOnly(Field):
 
         super().__init__(logger_handle=logger_handle,
                          size_props=size_props,
-                         default=default,
                          parent_register=parent_register,
                          inst_name=inst_name)
 
@@ -502,7 +504,6 @@ class FieldReadWrite(FieldReadOnly, FieldWriteOnly):
 
     def __init__(self, parent_register: RegReadWrite,
                  size_props: FieldSizeProps,
-                 default: Optional[int],
                  logger_handle: str,
                  inst_name: str):
 
@@ -512,7 +513,6 @@ class FieldReadWrite(FieldReadOnly, FieldWriteOnly):
 
         super().__init__(logger_handle=logger_handle,
                          size_props=size_props,
-                         default=default,
                          parent_register=parent_register,
                          inst_name=inst_name)
 
