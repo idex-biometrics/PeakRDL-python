@@ -23,7 +23,7 @@ from .fields import FieldWriteOnly
 from .fields import FieldReadWrite
 from .fields import Field
 
-
 from .memory import MemoryReadOnly
 from .memory import MemoryWriteOnly
 from .memory import MemoryReadWrite
+from .memory import Memory

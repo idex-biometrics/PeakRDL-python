@@ -8,7 +8,7 @@ from typing import Tuple
 from typing import Iterable
 from typing import List
 
-from ..lib import AddressMap, RegFile, Reg
+from ..lib import AddressMap, RegFile, Reg, Memory
 from ..lib import RegReadOnly, RegWriteOnly, RegReadWrite
 from ..lib import FieldReadOnly, FieldWriteOnly, FieldReadWrite
 from ..lib import FieldSizeProps, Field
@@ -165,6 +165,18 @@ class {{get_fully_qualified_type_name(node)}}_cls(RegFile):
         {%- endif %}
     {% endfor %}
 
+    @property
+    def registers(self) -> Iterable[Reg]:
+        """
+        generator that produces all the registers within the regfile
+        """
+        {% for child_node in node.registers(unroll=False) -%}
+        yield self.{{child_node.inst_name}}
+        {% endfor %}
+
+        # Empty generator for addrmaps with no regs
+        if False: yield
+
 {%- endmacro %}
 
 {%- macro addrmap_class(node) %}
@@ -205,11 +217,39 @@ class {{get_fully_qualified_type_name(node)}}_cls(AddressMap):
         """
         generator that produces all the registers within the addrmap
         """
-        {% for child_node in node.registers(unroll=True) -%}
+        {% for child_node in node.registers(unroll=False) -%}
         yield self.{{child_node.inst_name}}
         {% endfor %}
 
         # Empty generator for addrmaps with no regs
+        if False: yield
+
+    @property
+    def memories(self) -> Iterable[Memory]:
+        """
+        generator that produces all the memories within the addrmap
+        """
+        {% for child_node in node.children(unroll=False) -%}
+            {%- if isinstance(child_node, systemrdlMemNode) %}
+        yield self.{{child_node.inst_name}}
+            {%- endif %}
+        {% endfor %}
+
+        # Empty generator for addrmaps with no memories
+        if False: yield
+
+    @property
+    def addressmaps(self) -> Iterable[AddressMap]:
+        """
+        generator that produces all the address maps within the addrmap
+        """
+        {% for child_node in node.children(unroll=False) -%}
+            {%- if isinstance(child_node, systemrdlAddrmapNode) %}
+        yield self.{{child_node.inst_name}}
+            {%- endif %}
+        {% endfor %}
+
+        # Empty generator for addrmaps with no sub addrmaps
         if False: yield
 
 {%- endmacro %}
