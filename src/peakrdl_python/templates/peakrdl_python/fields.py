@@ -19,15 +19,24 @@ class FieldSizeProps:
     """
     class to hold the key attributes of a field
     """
-    __slots__ = ['__msb', '__lsb', '__width', '__high', '__low', '__default']
+    __slots__ = ['__msb', '__lsb', '__width', '__high', '__low', '__default', '__volatile']
 
-    def __init__(self, width: int, msb: int, lsb: int, high: int, low: int, default: Optional[int]): #pylint: disable=too-many-arguments
+    def __init__(
+            self,
+            width: int,
+            msb: int,
+            lsb: int,
+            high: int,
+            low: int,
+            default: Optional[int],
+            volatile: bool): #pylint: disable=too-many-arguments
         self.__width = width
         self.__msb = msb
         self.__lsb = lsb
         self.__high = high
         self.__low = low
         self.__default = default
+        self.__volatile = volatile
 
         if self.width < 1:
             raise ValueError('width must be greater than 0')
@@ -110,6 +119,13 @@ class FieldSizeProps:
         """
         return self.__default
 
+    @property
+    def volatile(self) -> bool:
+      """
+      Volatility of the field. A field is volatile if it is hardware-writable."
+      """
+      return self.__volatile
+
 
 class Field(Base):
     """
@@ -126,7 +142,8 @@ class Field(Base):
     def __init__(self, parent_register: Reg, size_props: FieldSizeProps,
                  logger_handle: str, inst_name: str):
 
-        super().__init__(logger_handle=logger_handle,
+        super().__init__(parent=parent_register,
+                         logger_handle=logger_handle,
                          inst_name=inst_name)
 
         if not isinstance(size_props, FieldSizeProps):
